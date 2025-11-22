@@ -11,11 +11,14 @@ import SwiftUI
 struct PooremApp: App {
 
     @StateObject private var appState = AppState()
+    @StateObject var regionStore = RegionStore()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+            ContentView()
+                .environmentObject(regionStore)
         }
     }
 }
@@ -38,3 +41,4 @@ struct RootView: View {
     }
 }
 
+ 

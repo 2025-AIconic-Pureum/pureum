@@ -16,9 +16,8 @@ struct HousingView: View {
     private let housings = [
         "원룸 / 오피스텔",
         "기숙사",
-        "부모님과 거주",
+        "아파트",
         "쉐어하우스",
-        "친척/지인 집",
         "기타"
     ]
     
@@ -38,7 +37,7 @@ struct HousingView: View {
                     .font(.title3)
                     .bold()
                     .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(alignment: .leading)
                 
                 Text("\(category) · \(jobType) 기준으로\n주거 상황을 같이 고려할게요.")
                     .foregroundColor(.secondary)
@@ -67,7 +66,7 @@ struct HousingView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 150)
                 
                 Spacer()
             }

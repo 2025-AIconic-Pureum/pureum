@@ -23,7 +23,7 @@ struct IncomeView: View {
                     .font(.title3)
                     .bold()
                     .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(alignment: .leading)
                 
                 Text(job == "없음"
                      ? "현재 받는 소득이 없다면 0원을 입력해 주세요."

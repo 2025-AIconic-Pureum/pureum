@@ -30,7 +30,7 @@ struct JobCheckView: View {
                     .padding(.bottom, 30)
                     
                 
-                NavigationLink(destination: JobCategorySelectView()) {
+                NavigationLink(destination: JobRegionSelectView()) {
                     Text("있어요")
                         .font(.headline)
                         .frame(maxWidth: 280)
