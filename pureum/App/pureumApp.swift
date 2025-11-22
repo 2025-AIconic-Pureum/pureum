@@ -30,12 +30,11 @@ struct RootView: View {
     var body: some View {
         Group {
             if !appState.isLoggedIn {
-                LoginView()
+                AuthRootView()
             } else if !appState.finishedOnboarding {
                 OnboardingFlowView()
             } else {
-                // TODO: 메인 화면
-                Text("메인 화면 자리")
+                MainTabView()
             }
         }
     }

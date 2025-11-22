@@ -1,84 +1,106 @@
-//
-//  LoginView.swift
-//  pureum
-//
-//  Created by 김수진 on 11/18/25.
-//
+// LoginView.swift
 
 import SwiftUI
 
 struct LoginView: View {
-
+    
     @EnvironmentObject var appState: AppState
-
+    
     @State private var email: String = ""
     @State private var password: String = ""
-    @State private var showError: Bool = false
-
+    
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    
     var body: some View {
-        VStack(spacing: 32) {
-
+        VStack(spacing: 24) {
             Spacer()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("푸름에 오신 걸 환영해요.")
-                    .font(.title)
-                    .fontWeight(.bold)
-
-                Text("로그인하고 나만의 자립 플랜을 만들어보세요.")
-                    .foregroundColor(.secondary)
+            
+            VStack(spacing: 8) {
+                Text("다시 만나서 반가워요!")
+                    .font(.title2)
+                    .bold()
+                
+                Text("로그인하고 나의 자립 플랜을 이어가요.")
                     .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(.center)
             .padding(.horizontal, 24)
-
+            
             VStack(spacing: 16) {
                 TextField("이메일", text: $email)
-                    .textContentType(.emailAddress)
+                    .textInputAutocapitalization(.never)
                     .keyboardType(.emailAddress)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
-
+                
                 SecureField("비밀번호", text: $password)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
             }
             .padding(.horizontal, 24)
-
-            if showError {
-                Text("이메일 또는 비밀번호를 확인해주세요.")
-                    .foregroundColor(.red)
+            
+            if let error = errorMessage {
+                Text(error)
                     .font(.footnote)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 24)
             }
-
+            
             Button {
-                login()
+                Task {
+                    await login()
+                }
             } label: {
-                Text("로그인")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(email.isEmpty || password.isEmpty ? Color.gray : Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else {
+                    Text("로그인")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
             }
+            .background(Color(red: 36/255, green: 178/255, blue: 40/255))
+            .foregroundColor(.white)
+            .cornerRadius(12)
             .padding(.horizontal, 24)
-            .disabled(email.isEmpty || password.isEmpty)
-
+            .disabled(isLoading || email.isEmpty || password.isEmpty)
+            
             Spacer()
         }
     }
-
-    private func login() {
-        // 임시 로그인 로직
-        // 지금은 그냥 아무 값이나 넣으면 로그인 성공시킴
-        if !email.isEmpty && !password.isEmpty {
-            appState.isLoggedIn = true
-            showError = false
-        } else {
-            showError = true
+    
+    private func login() async {
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            let res = try await AuthAPI.login(email: email, password: password)
+            await MainActor.run {
+                appState.applyAuthResponse(res)
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "로그인에 실패했습니다.\n이메일 또는 비밀번호를 확인해주세요."
+            }
         }
     }
+}
+
+#Preview {
+    LoginView()
+        .environmentObject(AppState())
+}
+
+
+#Preview {
+    LoginView()
 }

@@ -27,8 +27,26 @@ struct HousingProfile {
 final class AppState: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var finishedOnboarding: Bool = false
-
-    // ✅ 새로 추가
     @Published var jobProfile: JobProfile?
     @Published var housingProfile: HousingProfile?
+    @Published var hasOnboarded = false
+    @Published var userId: Int?
+    @Published var accessToken: String?
+    @Published var userName: String?   // 필요하면 나중에 세팅
+    
+    func applyAuthResponse(_ res: AuthResponseDTO) {
+        self.userId = res.userId
+        self.hasOnboarded = res.hasOnboarded
+        self.accessToken = res.accessToken
+        self.isLoggedIn = true
+    }
+    
+    func logout() {
+        isLoggedIn = false
+        hasOnboarded = false
+        userId = nil
+        accessToken = nil
+        userName = nil
+    }
+
 }
