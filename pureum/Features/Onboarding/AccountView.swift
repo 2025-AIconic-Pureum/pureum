@@ -26,32 +26,41 @@ struct AccountView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .offset(x: 120, y: 150)
                 .padding(.horizontal, 24)
 
                 TextField("5,000,000원", text: $asset)
                     .keyboardType(.numberPad)
+                    .frame(maxWidth: 280)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
+                    .offset(x: 0, y: 150)
+                
 
                 NavigationLink {
                     IncomeView()
                 } label: {
                     Text("다음")
                         .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: 280)
                         .padding()
                         .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
+                        .offset(x: 0, y: 150)
                 }
 
                 Spacer()
             }
         }
     }
+}
+
+#Preview {
+    AccountView()
 }

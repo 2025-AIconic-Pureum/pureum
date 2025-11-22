@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct IntroView: View {
+    private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
 
     var body: some View {
         ZStack {
@@ -15,7 +16,7 @@ struct IntroView: View {
             VStack {
                 Spacer()
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 24) {
                     Text("푸름.")
                         .font(.largeTitle)
                         .fontWeight(.bold)
@@ -25,24 +26,30 @@ struct IntroView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
+                .offset(x: 120, y: 150)
+                .padding(.horizontal, 24 )
 
                 NavigationLink {
                     AccountView()
                 } label: {
                     Text("시작하기")
                         .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: 280)
                         .padding()
-                        .background(Color.green)
+                        .background(headerGreen)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
+                        .offset(x: 0, y: 150)
                 }
+                
 
                 Spacer()
             }
         }
     }
+}
+#Preview {
+    IntroView()
 }
