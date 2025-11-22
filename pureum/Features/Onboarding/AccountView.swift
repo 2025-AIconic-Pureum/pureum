@@ -52,8 +52,9 @@ struct AccountView: View {
                         .cornerRadius(12)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
-                        .offset(x: 0, y: 100)
+                        
                 }
+                .offset(x: 0, y: 100)
 
                 Spacer()
             }

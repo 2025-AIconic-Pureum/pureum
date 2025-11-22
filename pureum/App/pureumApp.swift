@@ -17,7 +17,6 @@ struct PooremApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
-            ContentView()
                 .environmentObject(regionStore)
         }
     }

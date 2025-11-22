@@ -43,7 +43,7 @@ struct HousingCheckView: View {
                 .padding(.bottom, 12)
                 
                 // ✅ 집이 없을 때
-                NavigationLink(destination: Text("다음 단계 (없어요)")) {
+                NavigationLink(destination: MainTabView()) {
                     Text("없어요")
                         .font(.headline)
                         .frame(maxWidth: 280)
