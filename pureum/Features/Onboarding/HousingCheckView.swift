@@ -30,7 +30,7 @@ struct HousingCheckView: View {
                     .padding(.bottom, 30)
                 
                 // ✅ 집이 있을 때
-                NavigationLink(destination: Text("다음 단계 (있어요)")) {
+                NavigationLink(destination: HousingRegionView()) {
                     Text("있어요")
                         .font(.headline)
                         .frame(maxWidth: 280)

@@ -30,7 +30,7 @@ struct IntroView: View {
                 .padding(.horizontal, 24 )
 
                 NavigationLink {
-                    JobCheckView()
+                    AccountView()
                 } label: {
                     Text("시작하기")
                         .fontWeight(.semibold)

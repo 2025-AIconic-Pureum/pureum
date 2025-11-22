@@ -41,7 +41,7 @@ struct AccountView: View {
                 
 
                 NavigationLink {
-                    //IncomeView()
+                    JobCheckView()
                 } label: {
                     Text("다음")
                         .fontWeight(.semibold)
