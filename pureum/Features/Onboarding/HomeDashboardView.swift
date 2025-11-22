@@ -8,33 +8,10 @@ import SwiftUI
 struct HomeDashboardView: View {
     
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
-    
-    // TODO: 나중에 AppState나 서버에서 가져오도록 바꾸기
-    var jobStatusText: String = "IT개발·데이터 / 정규직"
-    var jobRegionText: String = "서울 서대문구"
-    
-    var housingStatusText: String = "원룸 / 월세"
-    var housingRegionText: String = "서울 은평구"
-    var housingCostText: String = "월 고정 주거비 약 45만 원"
-    
-    // 추천 더미 데이터
-    let recommendedJobs: [String] = [
-        "청년 IT 인턴십 (서대문구)",
-        "주 20시간 개발 아르바이트",
-        "디지털 역량 강화 교육 연계 일자리"
-    ]
-    
-    let recommendedHousings: [String] = [
-        "청년 전세임대 (LH)",
-        "역세권 청년주택",
-        "자립준비청년 우선 공급 원룸"
-    ]
-    
-    let recommendedProjects: [String] = [
-        "자립준비청년 취업 멘토링",
-        "금융·저축 교육 프로그램",
-        "심리·정서 지원 상담 프로그램"
-    ]
+    private let lightGreen = Color(red: 230/255, green: 245/255, blue: 235/255)
+
+    var jobStatusText: String = "등록된 일자리가 없습니다."
+    var housingStatusText: String = "아직 주거가 설정되지 않았습니다."
     
     var body: some View {
         NavigationStack {
@@ -42,147 +19,174 @@ struct HomeDashboardView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 28) {
                         
-                        // MARK: - 상단 요약 카드 (일자리 / 주거)
-                        Text("나의 현재 상태")
-                            .font(.headline)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
+                        // MARK: - 상단 타이틀
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("푸름,")
+                                .font(.largeTitle)
+                                .fontWeight(.heavy)
+                                .foregroundColor(headerGreen)
+                            
+                            Text("나의 자립 플랜")
+                                .font(.largeTitle)
+                                .fontWeight(.heavy)
+                                .foregroundColor(.black)
+                        }
+                        .padding(.top, 12)
+                        .padding(.horizontal, 20)
                         
-                        HStack(spacing: 16) {
-                            // 일자리 카드
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("일자리")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                        // MARK: - 상태 요약 카드
+                        VStack(alignment: .leading, spacing: 16) {
+                            
+                            HStack(spacing: 10) {
+                                Image(systemName: "briefcase.fill")
+                                    .foregroundColor(headerGreen)
+                                    .font(.title3)
                                 
                                 Text(jobStatusText)
-                                    .font(.headline)
-                                
-                                Text(jobRegionText)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(16)
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                            
-                            // 주거 카드
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("주거")
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.black)
+                            }
+                            
+                            Divider()
+                            
+                            HStack(spacing: 10) {
+                                Image(systemName: "house.fill")
+                                    .foregroundColor(headerGreen)
+                                    .font(.title3)
                                 
                                 Text(housingStatusText)
-                                    .font(.headline)
-                                
-                                Text(housingRegionText)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                
-                                Text(housingCostText)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .font(.subheadline)
+                                    .foregroundColor(.black)
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(16)
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(lightGreen.opacity(0.35))
+                        .cornerRadius(24)
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                         .padding(.horizontal, 20)
                         
-                        // MARK: - 추천 일자리
+                        
+                        // MARK: - 지금 할 수 있는 선택
                         VStack(alignment: .leading, spacing: 12) {
+                            Text("지금 할 수 있는 선택")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 20)
+                            
+                            NavigationLink(destination: JobHousingPlanStartView().navigationBarBackButtonHidden(true)) {
+                                HStack(alignment: .top, spacing: 12) {
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.title3)
+                                        .foregroundColor(headerGreen)
+                                        .padding(.top, 4)
+                                    
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text("일자리·주거 플랜 만들기")
+                                            .font(.headline)
+                                            .foregroundColor(.black)
+                                        
+                                        Text("기본 정보만 입력하면 처음부터 함께 설계해드려요.")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(headerGreen.opacity(0.15))
+                                .cornerRadius(20)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 20)
+                        }
+                        
+                        
+                        // MARK: - 추천 섹션
+                        VStack(alignment: .leading, spacing: 16) {
+                            
                             Text("추천 일자리")
                                 .font(.headline)
+                                .padding(.horizontal, 20)
                             
-                            ForEach(recommendedJobs, id: \.self) { job in
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(job)
-                                            .font(.subheadline)
-                                        Text("자립준비청년 우대 조건 포함")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                            ForEach(0..<3) { _ in
+                                RecommendationCard(title: "청년 디지털 일자리",
+                                                   subtitle: "자립준비청년 우대 지원자격 포함")
                             }
                         }
-                        .padding(.horizontal, 20)
                         
-                        // MARK: - 추천 주거
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            
                             Text("추천 주거")
                                 .font(.headline)
+                                .padding(.horizontal, 20)
                             
-                            ForEach(recommendedHousings, id: \.self) { house in
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(house)
-                                            .font(.subheadline)
-                                        Text("현재 소득·주거비 기준으로 조회")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                            ForEach(0..<3) { _ in
+                                RecommendationCard(title: "역세권 청년주택",
+                                                   subtitle: "현재 소득·주거비 기준 적합")
                             }
                         }
-                        .padding(.horizontal, 20)
                         
-                        // MARK: - 추천 자립사업
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            
                             Text("추천 자립사업")
                                 .font(.headline)
+                                .padding(.horizontal, 20)
                             
-                            ForEach(recommendedProjects, id: \.self) { project in
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(project)
-                                            .font(.subheadline)
-                                        Text("자립준비청년 대상 지원 프로그램")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                            ForEach(0..<3) { _ in
+                                RecommendationCard(title: "자립준비청년 월세지원",
+                                                   subtitle: "자립지원 가능성 높은 프로그램")
                             }
                         }
-                        .padding(.horizontal, 20)
                         
-                        Spacer(minLength: 40)
+                        Spacer(minLength: 50)
                     }
                 }
             }
-            .navigationTitle("푸름")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("")
+            .navigationBarHidden(true)
         }
     }
 }
+
+
+// MARK: - 작은 추천 카드 컴포넌트
+struct RecommendationCard: View {
+    
+    var title: String
+    var subtitle: String
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
+        .padding(.horizontal, 20)
+    }
+}
+
 
 #Preview {
     HomeDashboardView()
