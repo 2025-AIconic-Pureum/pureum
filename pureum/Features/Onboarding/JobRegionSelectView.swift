@@ -10,6 +10,7 @@ import SwiftUI
 struct JobRegionSelectView: View {
     
     @EnvironmentObject var regionStore: RegionStore
+    @EnvironmentObject var appState: AppState
     
     @State private var selectedSido: String = ""
     @State private var selectedSigungu: String = ""
@@ -65,9 +66,7 @@ struct JobRegionSelectView: View {
                 .padding(.bottom, 24)
                 
                 // ✅ 다음: 직종 선택 화면으로 이동
-                NavigationLink(
-                    destination: JobCategorySelectView()
-                ) {
+                NavigationLink(destination: JobCategorySelectView()) {
                     Text("다음")
                         .font(.headline)
                         .frame(maxWidth: 280)
@@ -77,6 +76,18 @@ struct JobRegionSelectView: View {
                         .cornerRadius(12)
                 }
                 .disabled(!isValid)
+                .simultaneousGesture(TapGesture().onEnded {
+                    if isValid {
+                        appState.jobProfile = JobProfile(
+                            category: "",          // 나중 화면에서 채움
+                            jobType: "",           // 나중 화면에서 채움
+                            regionSido: selectedSido,
+                            regionSigungu: selectedSigungu,
+                            monthlyIncome: 0       // 나중 화면에서 채움
+                        )
+                        print("📌 JobRegion 저장됨:", appState.jobProfile as Any)
+                    }
+                })
                 
                 Spacer()
             }

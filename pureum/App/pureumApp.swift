@@ -30,7 +30,7 @@ struct RootView: View {
         Group {
             if !appState.isLoggedIn {
                 AuthRootView()
-            } else if !appState.finishedOnboarding {
+            } else if !appState.hasOnboarded {
                 OnboardingFlowView()
             } else {
                 MainTabView()

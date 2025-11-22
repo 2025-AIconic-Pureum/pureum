@@ -2,16 +2,31 @@
 //  HomeDashboardView.swift
 //  pureum
 //
-
 import SwiftUI
 
 struct HomeDashboardView: View {
     
+    @EnvironmentObject var appState: AppState   // ✅ AppState 주입
+    
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
-    private let lightGreen = Color(red: 230/255, green: 245/255, blue: 235/255)
+    private let lightGreen  = Color(red: 230/255, green: 245/255, blue: 235/255)
 
-    var jobStatusText: String = "등록된 일자리가 없습니다."
-    var housingStatusText: String = "아직 주거가 설정되지 않았습니다."
+    // ✅ AppState 기반으로 동적으로 계산
+    private var jobStatusText: String {
+        if let job = appState.jobProfile {
+            return "\(job.regionSido) \(job.regionSigungu)에 \(job.category) (\(job.jobType)), 월 \(job.monthlyIncome)원"
+        } else {
+            return "등록된 일자리가 없습니다."
+        }
+    }
+    
+    private var housingStatusText: String {
+        if let h = appState.housingProfile {
+            return "\(h.regionSido) \(h.regionSigungu) • \(h.housingType) • 월 \(h.monthlyCost)원"
+        } else {
+            return "아직 주거가 설정되지 않았습니다."
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -45,9 +60,10 @@ struct HomeDashboardView: View {
                                     .foregroundColor(headerGreen)
                                     .font(.title3)
                                 
-                                Text(jobStatusText)
+                                Text(jobStatusText)          // ✅ 여기서 appState를 반영
                                     .font(.subheadline)
                                     .foregroundColor(.black)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                             
                             Divider()
@@ -57,9 +73,10 @@ struct HomeDashboardView: View {
                                     .foregroundColor(headerGreen)
                                     .font(.title3)
                                 
-                                Text(housingStatusText)
+                                Text(housingStatusText)      // ✅ 여기서도 반영
                                     .font(.subheadline)
                                     .foregroundColor(.black)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         .padding()
@@ -77,7 +94,10 @@ struct HomeDashboardView: View {
                                 .fontWeight(.bold)
                                 .padding(.horizontal, 20)
                             
-                            NavigationLink(destination: JobHousingPlanStartView().navigationBarBackButtonHidden(true)) {
+                            NavigationLink(
+                                destination: JobHousingPlanStartView()
+                                    .navigationBarBackButtonHidden(true)
+                            ) {
                                 HStack(alignment: .top, spacing: 12) {
                                     
                                     Image(systemName: "sparkles")
@@ -107,10 +127,8 @@ struct HomeDashboardView: View {
                             .padding(.horizontal, 20)
                         }
                         
-                        
-                        // MARK: - 추천 섹션
+                        // MARK: - 추천 섹션 (아래에서 다시 손 볼 거야)
                         VStack(alignment: .leading, spacing: 16) {
-                            
                             Text("추천 일자리")
                                 .font(.headline)
                                 .padding(.horizontal, 20)
@@ -122,7 +140,6 @@ struct HomeDashboardView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 16) {
-                            
                             Text("추천 주거")
                                 .font(.headline)
                                 .padding(.horizontal, 20)
@@ -134,7 +151,6 @@ struct HomeDashboardView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 16) {
-                            
                             Text("추천 자립사업")
                                 .font(.headline)
                                 .padding(.horizontal, 20)
@@ -154,8 +170,6 @@ struct HomeDashboardView: View {
         }
     }
 }
-
-
 // MARK: - 작은 추천 카드 컴포넌트
 struct RecommendationCard: View {
     
@@ -187,7 +201,7 @@ struct RecommendationCard: View {
     }
 }
 
-
 #Preview {
     HomeDashboardView()
+        .environmentObject(AppState())   // ✅ Preview 에도 주입
 }

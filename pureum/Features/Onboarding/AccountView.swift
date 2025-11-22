@@ -7,7 +7,8 @@
 import SwiftUI
 
 struct AccountView: View {
-
+    
+    @EnvironmentObject var appState: AppState
     @State private var asset: String = ""
 
     var body: some View {
@@ -42,7 +43,13 @@ struct AccountView: View {
 
                 NavigationLink {
                     JobCheckView()
-                } label: {
+                    .onAppear {
+                            if let assetInt = Int(asset) {
+                                appState.assetProfile = AssetProfile(currentAsset: assetInt)
+                                print("✅ 저장된 assetProfile:", appState.assetProfile as Any)
+                            } else {print("❌ 자산 숫자 변환 실패:", asset)}
+                        }
+                }  label: {
                     Text("다음")
                         .fontWeight(.semibold)
                         .frame(maxWidth: 280)

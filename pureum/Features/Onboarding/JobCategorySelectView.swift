@@ -11,10 +11,11 @@
 //
 //  Created by 김수진 on 11/22/25.
 //
-
 import SwiftUI
 
 struct JobCategorySelectView: View {
+    
+    @EnvironmentObject var appState: AppState      // ✅ 추가
     
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     
@@ -86,6 +87,23 @@ struct JobCategorySelectView: View {
                                     )
                                     .cornerRadius(12)
                             }
+                            // 👇 버튼 탭 시 AppState에 category 저장
+                            .simultaneousGesture(TapGesture().onEnded {
+                                if var job = appState.jobProfile {
+                                    job.category = category
+                                    appState.jobProfile = job
+                                } else {
+                                    // 아직 jobProfile이 없으면 새로 만들어줌
+                                    appState.jobProfile = JobProfile(
+                                        category: category,
+                                        jobType: "",
+                                        regionSido: "",
+                                        regionSigungu: "",
+                                        monthlyIncome: 0
+                                    )
+                                }
+                                print("📌 JobProfile.category 저장:", category)
+                            })
                         }
                     }
                     .padding(.horizontal, 150)
@@ -99,5 +117,8 @@ struct JobCategorySelectView: View {
 }
 
 #Preview {
-    JobCategorySelectView()
+    NavigationStack {
+        JobCategorySelectView()
+            .environmentObject(AppState())   // ✅ 프리뷰에도 추가
+    }
 }

@@ -2,53 +2,52 @@
 //  AppState.swift
 //  pureum
 //
-//  Created by 김수진 on 11/18/25.
-//
 
 import Foundation
 import SwiftUI
 
+// MARK: - 내부 모델
+
 struct AssetProfile {
-    var currentAsset: Int        // 현재 자산
+    var currentAsset: Int
 }
 
 struct JobProfile {
-    var category: String      // 예: "IT개발·데이터"
-    var jobType: String       // 예: "정규직"
-    var regionSido: String    // 예: "서울"
-    var regionSigungu: String // 예: "서대문구"
-    var monthlyIncome: Int    // 월 소득
+    var category: String
+    var jobType: String
+    var regionSido: String
+    var regionSigungu: String
+    var monthlyIncome: Int
 }
 
 struct HousingProfile {
-    var regionSido: String    // 예: "대구"
-    var regionSigungu: String // 예: "북구"
-    var housingType: String   // 예: "원룸 / 오피스텔"
-    var deposit: Int          // 보증금
-    var monthlyCost: Int      // 월 고정 주거비
+    var regionSido: String
+    var regionSigungu: String
+    var housingType: String
+    var deposit: Int
+    var monthlyCost: Int
 }
 
-
-// MARK: - Onboarding DTOs (서버 OnboardingSubmitRequest 와 1:1 매핑)
+// MARK: - DTOs (서버 1:1)
 
 struct AssetDTO: Codable {
     let currentAsset: Int
 }
 
 struct JobDTO: Codable {
-    let category: String
-    let jobType: String
-    let regionSido: String
-    let regionSigungu: String
-    let monthlyIncome: Int
+    let hasJob: Bool
+    let category: String?
+    let jobType: String?
+    let region: String?
+    let monthlyIncome: Int?
 }
 
 struct HousingDTO: Codable {
-    let regionSido: String
-    let regionSigungu: String
-    let housingType: String
-    let deposit: Int
-    let monthlyCost: Int
+    let hasHousing: Bool
+    let region: String?
+    let housingType: String?
+    let deposit: Int?
+    let monthlyCost: Int?
 }
 
 struct OnboardingProfileRequestDTO: Codable {
@@ -58,28 +57,46 @@ struct OnboardingProfileRequestDTO: Codable {
     let housing: HousingDTO
 }
 
+struct UserProfileResponseDTO: Codable {
+    let userId: Int
+    let hasOnboarded: Bool
+    let asset: Int
 
+    let jobCategory: String?
+    let jobType: String?
+    let jobRegion: String?
+    let monthlyIncome: Int?
+
+    let housingRegion: String?
+    let housingType: String?
+    let deposit: Int?
+    let monthlyCost: Int?
+}
+
+
+// MARK: - AppState
 
 final class AppState: ObservableObject {
     @Published var isLoggedIn: Bool = false
-    @Published var finishedOnboarding: Bool = false
-    
+    @Published var hasOnboarded: Bool = false
+    @Published var finishedOnboarding: Bool = false 
+
     @Published var assetProfile: AssetProfile?
     @Published var jobProfile: JobProfile?
     @Published var housingProfile: HousingProfile?
-    
-    @Published var hasOnboarded = false
+
     @Published var userId: Int?
     @Published var accessToken: String?
-    @Published var userName: String?   // 필요하면 나중에 세팅
-    
+    @Published var userName: String?
+
+
     func applyAuthResponse(_ res: AuthResponseDTO) {
         self.userId = res.userId
         self.hasOnboarded = res.hasOnboarded
         self.accessToken = res.accessToken
         self.isLoggedIn = true
     }
-    
+
     func logout() {
         isLoggedIn = false
         hasOnboarded = false
@@ -89,28 +106,60 @@ final class AppState: ObservableObject {
     }
 
 
+    // MARK: - 온보딩 요청 DTO 생성
+
     func makeOnboardingRequestDTO() -> OnboardingProfileRequestDTO? {
         guard let userId = userId else { return nil }
 
-        let assetDTO = AssetDTO(
-            currentAsset: assetProfile?.currentAsset ?? 0
-        )
+        print("📌 asset:", assetProfile as Any)
+        print("📌 job:", jobProfile as Any)
+        print("📌 housing:", housingProfile as Any)
 
-        let jobDTO = JobDTO(
-            category: jobProfile?.category ?? "",
-            jobType: jobProfile?.jobType ?? "",
-            regionSido: jobProfile?.regionSido ?? "",
-            regionSigungu: jobProfile?.regionSigungu ?? "",
-            monthlyIncome: jobProfile?.monthlyIncome ?? 0
-        )
+        // ---- 자산 (필수) ----
+        guard let asset = assetProfile else { return nil }
+        let assetDTO = AssetDTO(currentAsset: asset.currentAsset)
 
-        let housingDTO = HousingDTO(
-            regionSido: housingProfile?.regionSido ?? "",
-            regionSigungu: housingProfile?.regionSigungu ?? "",
-            housingType: housingProfile?.housingType ?? "",
-            deposit: housingProfile?.deposit ?? 0,
-            monthlyCost: housingProfile?.monthlyCost ?? 0
-        )
+        // ---- 일자리 (선택) ----
+        let jobDTO: JobDTO = {
+            if let job = jobProfile {
+                return JobDTO(
+                    hasJob: true,
+                    category: job.category,
+                    jobType: job.jobType,
+                    region: "\(job.regionSido) \(job.regionSigungu)",
+                    monthlyIncome: job.monthlyIncome
+                )
+            } else {
+                return JobDTO(
+                    hasJob: false,
+                    category: nil,
+                    jobType: nil,
+                    region: nil,
+                    monthlyIncome: nil
+                )
+            }
+        }()
+
+        // ---- 주거 (선택) ----
+        let housingDTO: HousingDTO = {
+            if let housing = housingProfile {
+                return HousingDTO(
+                    hasHousing: true,
+                    region: "\(housing.regionSido) \(housing.regionSigungu)",
+                    housingType: housing.housingType,
+                    deposit: housing.deposit,
+                    monthlyCost: housing.monthlyCost
+                )
+            } else {
+                return HousingDTO(
+                    hasHousing: false,
+                    region: nil,
+                    housingType: nil,
+                    deposit: nil,
+                    monthlyCost: nil
+                )
+            }
+        }()
 
         return OnboardingProfileRequestDTO(
             userId: userId,
@@ -121,4 +170,52 @@ final class AppState: ObservableObject {
     }
 
 
+
+    // MARK: - 서버 프로필 적용
+
+    func applyUserProfile(_ res: UserProfileResponseDTO) {
+        self.hasOnboarded = res.hasOnboarded
+
+        // 자산
+        self.assetProfile = AssetProfile(currentAsset: res.asset)
+
+        // 일자리
+        if let category = res.jobCategory,
+           !category.isEmpty,
+           let region = res.jobRegion {
+
+            let parts = region.split(separator: " ").map { String($0) }
+            let sido = parts.first ?? ""
+            let sigungu = parts.count > 1 ? parts[1] : ""
+
+            self.jobProfile = JobProfile(
+                category: category,
+                jobType: res.jobType ?? "",
+                regionSido: sido,
+                regionSigungu: sigungu,
+                monthlyIncome: res.monthlyIncome ?? 0
+            )
+        } else {
+            self.jobProfile = nil
+        }
+
+        // 주거
+        if let region = res.housingRegion,
+           !region.isEmpty {
+
+            let parts = region.split(separator: " ").map { String($0) }
+            let sido = parts.first ?? ""
+            let sigungu = parts.count > 1 ? parts[1] : ""
+
+            self.housingProfile = HousingProfile(
+                regionSido: sido,
+                regionSigungu: sigungu,
+                housingType: res.housingType ?? "",
+                deposit: res.deposit ?? 0,
+                monthlyCost: res.monthlyCost ?? 0
+            )
+        } else {
+            self.housingProfile = nil
+        }
+    }
 }

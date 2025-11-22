@@ -2,13 +2,14 @@
 //  IncomeView.swift
 //  pureum
 //
-
 import SwiftUI
 
 struct IncomeView: View {
     
+    @EnvironmentObject var appState: AppState      // ✅ AppState 주입
     @State private var income: String = ""
-    let job: String      // "없음" 또는 "IT개발·데이터 / 정규직" 같은 설명
+    
+    let job: String      // "없음" 또는 "IT개발·데이터 / 정규직"
     
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     
@@ -41,7 +42,7 @@ struct IncomeView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 20)
                 
-                // ✅ 월 소득 입력 후 → 주거 체크 화면
+                // ✅ 월 소득 저장 후 → 주거 체크 화면
                 NavigationLink(destination: HousingCheckView()) {
                     Text("다음")
                         .font(.headline)
@@ -52,6 +53,30 @@ struct IncomeView: View {
                         .cornerRadius(12)
                 }
                 .padding(.horizontal, 24)
+                .simultaneousGesture(TapGesture().onEnded {
+                    let incomeInt = Int(income) ?? 0
+                    
+                    if var jobProfile = appState.jobProfile {
+                        // 이미 region / category / type 설정돼 있으면 income만 채우기
+                        jobProfile.monthlyIncome = incomeInt
+                        appState.jobProfile = jobProfile
+                    } else {
+                        // 혹시라도 앞단에서 jobProfile을 못 채운 경우를 대비한 fallback
+                        let parts = job.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
+                        let category = parts.first ?? "기타"
+                        let type = parts.count > 1 ? parts[1] : "기타"
+                        
+                        appState.jobProfile = JobProfile(
+                            category: String(category),
+                            jobType: String(type),
+                            regionSido: "",
+                            regionSigungu: "",
+                            monthlyIncome: incomeInt
+                        )
+                    }
+                    
+                    print("📌 저장된 jobProfile:", appState.jobProfile as Any)
+                })
                 
                 Spacer()
             }
@@ -61,5 +86,8 @@ struct IncomeView: View {
 }
 
 #Preview {
-    IncomeView(job: "IT개발·데이터 / 정규직")
+    NavigationStack {
+        IncomeView(job: "IT개발·데이터 / 정규직")
+            .environmentObject(AppState())
+    }
 }

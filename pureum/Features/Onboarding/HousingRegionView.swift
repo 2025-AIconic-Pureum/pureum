@@ -2,12 +2,12 @@
 //  HousingRegionView.swift
 //  pureum
 //
-
 import SwiftUI
 
 struct HousingRegionView: View {
     
     @EnvironmentObject var regionStore: RegionStore
+    @EnvironmentObject var appState: AppState      // ✅ 추가
     
     @State private var selectedSido: String = ""
     @State private var selectedSigungu: String = ""
@@ -62,9 +62,8 @@ struct HousingRegionView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
                 
-                NavigationLink(
-                    destination: HousingTypeView()
-                ) {
+                // 다음 버튼
+                NavigationLink(destination: HousingTypeView()) {
                     Text("다음")
                         .font(.headline)
                         .frame(maxWidth: 280)
@@ -74,6 +73,26 @@ struct HousingRegionView: View {
                         .cornerRadius(12)
                 }
                 .disabled(!isValid)
+                .simultaneousGesture(TapGesture().onEnded {
+                    if isValid {
+                        if var housing = appState.housingProfile {
+                            housing.regionSido = selectedSido
+                            housing.regionSigungu = selectedSigungu
+                            appState.housingProfile = housing
+                        } else {
+                            // 아직 housingProfile이 없다면 새로 생성
+                            appState.housingProfile = HousingProfile(
+                                regionSido: selectedSido,
+                                regionSigungu: selectedSigungu,
+                                housingType: "",
+                                deposit: 0,
+                                monthlyCost: 0
+                            )
+                        }
+                        
+                        print("📌 Housing region 저장됨:", selectedSido, selectedSigungu)
+                    }
+                })
                 
                 Spacer()
             }
@@ -90,5 +109,6 @@ struct HousingRegionView: View {
     NavigationStack {
         HousingRegionView()
             .environmentObject(RegionStore())
+            .environmentObject(AppState())    // ✅ Preview에도 넣어야 미리보기 가능
     }
 }
