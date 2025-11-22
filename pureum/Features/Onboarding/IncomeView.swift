@@ -2,58 +2,64 @@
 //  IncomeView.swift
 //  pureum
 //
-//  Created by 김수진 on 11/18/25.
-//
 
 import SwiftUI
 
 struct IncomeView: View {
-
+    
     @State private var income: String = ""
-
+    let job: String      // "없음" 또는 "IT개발·데이터 / 정규직" 같은 설명
+    
+    private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
+    
     var body: some View {
         ZStack {
             GreenHeaderBackground()
-
+            
             VStack {
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("현재 월소득을 알려주세요.")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-
-                    Text("대략적인 금액이어도 좋아요.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-
-                TextField("5,000,000원", text: $income)
+                Spacer().frame(height: 100)
+                
+                Text("월 소득을 알려주세요.")
+                    .font(.title3)
+                    .bold()
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Text(job == "없음"
+                     ? "현재 받는 소득이 없다면 0원을 입력해 주세요."
+                     : "\(job) 기준 월 소득을 입력해 주세요.")
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                
+                TextField("예: 1,500,000", text: $income)
                     .keyboardType(.numberPad)
                     .padding()
+                    .frame(maxWidth: 280)
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                     .padding(.horizontal, 24)
-                    .padding(.top, 16)
-
-                NavigationLink {
-                    HowMuchView()     // 다음 페이지로 이동!
-                } label: {
+                    .padding(.bottom, 20)
+                
+                // ✅ 월 소득 입력 후 → 주거 체크 화면
+                NavigationLink(destination: HousingCheckView()) {
                     Text("다음")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
+                        .font(.headline)
+                        .frame(maxWidth: 280)
                         .padding()
-                        .background(Color.green)
+                        .background(headerGreen)
                         .foregroundColor(.white)
                         .cornerRadius(12)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 24)
                 }
-
+                .padding(.horizontal, 24)
+                
                 Spacer()
             }
+            .offset(y: 300)
         }
     }
+}
+
+#Preview {
+    IncomeView(job: "IT개발·데이터 / 정규직")
 }

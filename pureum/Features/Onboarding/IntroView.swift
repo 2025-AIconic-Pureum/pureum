@@ -26,11 +26,11 @@ struct IntroView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .offset(x: 120, y: 150)
+                .offset(x: 120, y: 100)
                 .padding(.horizontal, 24 )
 
                 NavigationLink {
-                    AccountView()
+                    JobCheckView()
                 } label: {
                     Text("시작하기")
                         .fontWeight(.semibold)
@@ -41,7 +41,7 @@ struct IntroView: View {
                         .cornerRadius(12)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
-                        .offset(x: 0, y: 150)
+                        .offset(x: 0, y: 100)
                 }
                 
 

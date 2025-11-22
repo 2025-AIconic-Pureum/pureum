@@ -26,7 +26,7 @@ struct AccountView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .offset(x: 120, y: 150)
+                .offset(x: 120, y: 100)
                 .padding(.horizontal, 24)
 
                 TextField("5,000,000원", text: $asset)
@@ -37,11 +37,11 @@ struct AccountView: View {
                     .cornerRadius(12)
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
-                    .offset(x: 0, y: 150)
+                    .offset(x: 0, y: 100)
                 
 
                 NavigationLink {
-                    IncomeView()
+                    //IncomeView()
                 } label: {
                     Text("다음")
                         .fontWeight(.semibold)
@@ -52,7 +52,7 @@ struct AccountView: View {
                         .cornerRadius(12)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
-                        .offset(x: 0, y: 150)
+                        .offset(x: 0, y: 100)
                 }
 
                 Spacer()
