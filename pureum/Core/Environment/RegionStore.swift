@@ -4,6 +4,7 @@
 //
 //  Created by 김수진 on 11/22/25.
 //
+// 한국지역 저장하는 것
 
 import SwiftUI
 

@@ -6,6 +6,12 @@
 import Foundation
 import SwiftUI
 
+struct AuthResponseDTO: Codable {
+    let userId: Int
+    let hasOnboarded: Bool
+    let accessToken: String
+}
+
 // MARK: - 내부 모델
 
 struct AssetProfile {
