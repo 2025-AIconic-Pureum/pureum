@@ -29,32 +29,35 @@ struct HousingProfile {
 }
 
 
-struct AssetInfoDTO: Codable {
+// MARK: - Onboarding DTOs (서버 OnboardingSubmitRequest 와 1:1 매핑)
+
+struct AssetDTO: Codable {
     let currentAsset: Int
 }
 
-struct JobInfoDTO: Codable {
-    let hasJob: Bool
-    let category: String?
-    let jobType: String?
-    let jobRegion: String?   // "서울 서대문구" 같은 풀 문자열로 보냄
-    let monthlyIncome: Int?
+struct JobDTO: Codable {
+    let category: String
+    let jobType: String
+    let regionSido: String
+    let regionSigungu: String
+    let monthlyIncome: Int
 }
 
-struct HousingInfoDTO: Codable {
-    let hasHousing: Bool
-    let housingRegion: String? // "대구 북구"
-    let housingType: String?
-    let deposit: Int?          // 보증금
-    let fixedHousingCost: Int? // 월 고정 주거비
+struct HousingDTO: Codable {
+    let regionSido: String
+    let regionSigungu: String
+    let housingType: String
+    let deposit: Int
+    let monthlyCost: Int
 }
 
 struct OnboardingProfileRequestDTO: Codable {
     let userId: Int
-    let asset: AssetInfoDTO?
-    let job: JobInfoDTO?
-    let housing: HousingInfoDTO?
+    let asset: AssetDTO
+    let job: JobDTO
+    let housing: HousingDTO
 }
+
 
 
 final class AppState: ObservableObject {
@@ -85,57 +88,29 @@ final class AppState: ObservableObject {
         userName = nil
     }
 
+
     func makeOnboardingRequestDTO() -> OnboardingProfileRequestDTO? {
         guard let userId = userId else { return nil }
 
-        let assetDTO: AssetInfoDTO? = {
-            guard let asset = assetProfile else { return nil }
-            return AssetInfoDTO(currentAsset: asset.currentAsset)
-        }()
+        let assetDTO = AssetDTO(
+            currentAsset: assetProfile?.currentAsset ?? 0
+        )
 
-        let jobDTO: JobInfoDTO? = {
-            guard let job = jobProfile else {
-                return JobInfoDTO(
-                    hasJob: false,
-                    category: nil,
-                    jobType: nil,
-                    jobRegion: nil,
-                    monthlyIncome: nil
-                )
-            }
+        let jobDTO = JobDTO(
+            category: jobProfile?.category ?? "",
+            jobType: jobProfile?.jobType ?? "",
+            regionSido: jobProfile?.regionSido ?? "",
+            regionSigungu: jobProfile?.regionSigungu ?? "",
+            monthlyIncome: jobProfile?.monthlyIncome ?? 0
+        )
 
-            let region = "\(job.regionSido) \(job.regionSigungu)"
-
-            return JobInfoDTO(
-                hasJob: true,
-                category: job.category,
-                jobType: job.jobType,
-                jobRegion: region,
-                monthlyIncome: job.monthlyIncome
-            )
-        }()
-
-        let housingDTO: HousingInfoDTO? = {
-            guard let housing = housingProfile else {
-                return HousingInfoDTO(
-                    hasHousing: false,
-                    housingRegion: nil,
-                    housingType: nil,
-                    deposit: nil,
-                    fixedHousingCost: nil
-                )
-            }
-
-            let region = "\(housing.regionSido) \(housing.regionSigungu)"
-
-            return HousingInfoDTO(
-                hasHousing: true,
-                housingRegion: region,
-                housingType: housing.housingType,
-                deposit: housing.deposit,
-                fixedHousingCost: housing.monthlyCost
-            )
-        }()
+        let housingDTO = HousingDTO(
+            regionSido: housingProfile?.regionSido ?? "",
+            regionSigungu: housingProfile?.regionSigungu ?? "",
+            housingType: housingProfile?.housingType ?? "",
+            deposit: housingProfile?.deposit ?? 0,
+            monthlyCost: housingProfile?.monthlyCost ?? 0
+        )
 
         return OnboardingProfileRequestDTO(
             userId: userId,
@@ -144,5 +119,6 @@ final class AppState: ObservableObject {
             housing: housingDTO
         )
     }
+
 
 }

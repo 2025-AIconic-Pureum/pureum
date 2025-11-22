@@ -32,11 +32,29 @@ struct OnboardingAPI {
         }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                completion(true)
-            } else {
-                completion(false)
+            
+            if let http = response as? HTTPURLResponse {
+                print("📡 STATUS:", http.statusCode)
+
+                if (200...299).contains(http.statusCode) {
+                    completion(true)
+                    return
+                }
             }
+
+            if let data = data,
+               let body = String(data: data, encoding: .utf8) {
+                print("❌ RESPONSE BODY:", body)
+            }
+
+            if let error = error {
+                print("❌ URLSession Error:", error)
+            }
+
+            completion(false)
         }.resume()
+
+        
+        
     }
 }

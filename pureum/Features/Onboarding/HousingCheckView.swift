@@ -9,6 +9,12 @@ import SwiftUI
 
 struct HousingCheckView: View {
     
+    @EnvironmentObject var appState: AppState
+    
+    @State private var goToMain = false
+    @State private var isSubmitting = false
+    @State private var showError = false
+    
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     
     var body: some View {
@@ -22,14 +28,14 @@ struct HousingCheckView: View {
                     .font(.title3)
                     .bold()
                     .padding(.horizontal, 24)
-                    .frame(alignment: .leading)
                 
                 Text("예: 원룸, 기숙사 등")
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 30)
                 
-                // ✅ 집이 있을 때
+                
+                // 👉 집이 있을 때 (기존 그대로)
                 NavigationLink(destination: HousingRegionView()) {
                     Text("있어요")
                         .font(.headline)
@@ -42,8 +48,17 @@ struct HousingCheckView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 12)
                 
-                // ✅ 집이 없을 때
-                NavigationLink(destination: MainTabView()) {
+                
+                // 👉 숨겨진 NavigationLink (화면 이동 담당)
+                NavigationLink(destination: MainTabView(),
+                               isActive: $goToMain) {
+                    EmptyView()
+                }
+                
+                // 👉 집이 없어요 버튼 (서버 전송 + 이동)
+                Button {
+                    handleNoHousing()
+                } label: {
                     Text("없어요")
                         .font(.headline)
                         .frame(maxWidth: 280)
@@ -52,15 +67,40 @@ struct HousingCheckView: View {
                         .foregroundColor(.black)
                         .cornerRadius(12)
                 }
+                .disabled(isSubmitting)
                 .padding(.horizontal, 24)
                 
                 Spacer()
             }
             .offset(y: 300)
         }
+        .alert("저장에 실패했어요", isPresented: $showError) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text("네트워크 상태를 확인해주세요.")
+        }
+    }
+    
+    
+    // MARK: - 온보딩 완료 처리
+    private func handleNoHousing() {
+        // Housing 정보 없다고 설정
+        appState.housingProfile = nil
+        
+        isSubmitting = true
+        
+        OnboardingCoordinator.completeOnboarding(appState: appState) { success in
+            isSubmitting = false
+            if success {
+                goToMain = true
+            } else {
+                showError = true
+            }
+        }
     }
 }
 
 #Preview {
     HousingCheckView()
+        .environmentObject(AppState())
 }
