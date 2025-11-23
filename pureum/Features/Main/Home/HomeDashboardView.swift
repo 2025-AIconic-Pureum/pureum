@@ -48,7 +48,7 @@ struct HomeDashboardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                Color.white
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
@@ -56,17 +56,17 @@ struct HomeDashboardView: View {
                         
                         // MARK: - 상단 타이틀
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("푸름,")
-                                .font(.largeTitle)
+                            Text("당신의 청춘을 더 푸르게,")
+                                .font(.body)
                                 .fontWeight(.heavy)
-                                .foregroundColor(headerGreen)
+                                .foregroundColor(.black)
                             
                             Text("나의 자립 플랜")
                                 .font(.largeTitle)
                                 .fontWeight(.heavy)
-                                .foregroundColor(.black)
+                                .foregroundColor(headerGreen)
                         }
-                        .padding(.top, 12)
+                        .padding(.top, 70)
                         .padding(.horizontal, 20)
                         
                         
