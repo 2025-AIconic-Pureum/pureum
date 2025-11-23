@@ -79,6 +79,97 @@ struct UserProfileResponseDTO: Codable {
     let monthlyCost: Int?
 }
 
+//분석
+
+// MARK: - 집 후보 정보
+struct HouseCandidate: Identifiable, Codable, Equatable {
+    let id: UUID = UUID()
+    let housingType: String   // 주거 형태 (원룸, 기숙사 등)
+    let location: String      // 위치 (예: "대구 수성구")
+    let deposit: Int          // 보증금
+    let monthlyCost: Int      // 월 주거 비용
+    enum CodingKeys: String, CodingKey {
+        case housingType
+        case location
+        case deposit
+        case monthlyCost
+    }
+}
+
+// MARK: - 일자리 후보 정보
+struct JobCandidate: Identifiable, Codable, Equatable {
+    let id: UUID = UUID()
+    let jobCategory: String
+    let retype: String
+    let location: String
+    let salary: Int
+    let career: String
+    let education: String
+    enum CodingKeys: String, CodingKey {
+        case jobCategory
+        case retype
+        case location
+        case salary
+        case career
+        case education 
+    }
+}
+
+enum AnalysisMode {
+    case houseJob   // 집 + 일자리 둘 다 추천
+    case house      // 집만 추천 (일자리는 이미 있음)
+    case job        // 일자리만 추천 (집은 이미 있음)
+}
+
+@MainActor
+final class PlanRecommendationViewModel: ObservableObject {
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var resultText: String = ""   // 서버에서 받은 String 그대로 표시
+
+    func runAnalysis(
+        mode: AnalysisMode,
+        houses: [HouseCandidate],
+        jobs: [JobCandidate]
+    ) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let result: String
+
+            switch mode {
+            case .houseJob:
+                // 집 + 일자리 후보 같이 보내기
+                result = try await AnalysisAPI.shared.recommendHouseJob(
+                    houses: houses,
+                    jobs: jobs
+                )
+
+            case .house:
+                // 집만 보내기
+                result = try await AnalysisAPI.shared.recommendHouseOnly(
+                    houses: houses
+                )
+
+            case .job:
+                // 일자리만 보내기
+                result = try await AnalysisAPI.shared.recommendJobOnly(
+                    jobs: jobs
+                )
+            }
+
+            self.resultText = result
+
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+}
+
+
+
 
 // MARK: - AppState
 

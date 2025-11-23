@@ -72,7 +72,7 @@ struct HousingCheckView: View {
                 
                 Spacer()
             }
-            .offset(y: 300)
+            .offset(y: 230)
         }
         .alert("저장에 실패했어요", isPresented: $showError) {
             Button("확인", role: .cancel) {}

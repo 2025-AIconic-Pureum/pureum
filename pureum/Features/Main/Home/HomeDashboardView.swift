@@ -95,7 +95,7 @@ struct HomeDashboardView: View {
                                 .padding(.horizontal, 20)
                             
                             NavigationLink(
-                                destination: JobHousingPlanStartView()
+                                destination: PlanRecommendationView(houseCandidates: [], jobCandidates: [])
                                     .navigationBarBackButtonHidden(true)
                             ) {
                                 HStack(alignment: .top, spacing: 12) {

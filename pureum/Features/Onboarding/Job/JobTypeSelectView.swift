@@ -46,8 +46,10 @@ struct JobTypeSelectView: View {
                         
                         NavigationLink(destination: IncomeView(job: "\(category) / \(type)")) {
                             Text(type)
-                                .font(.headline)
-                                .frame(maxWidth: 200, minHeight: 60)
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity, minHeight: 60)
+                                .padding(.horizontal, 4)
                                 .background(Color.white)
                                 .foregroundColor(.black)
                                 .overlay(
@@ -78,7 +80,7 @@ struct JobTypeSelectView: View {
                 
                 Spacer()
             }
-            .offset(y: 300)
+            .offset(y: 230)
         }
     }
 }

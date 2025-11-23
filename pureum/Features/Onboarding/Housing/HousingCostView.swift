@@ -19,6 +19,8 @@ struct HousingCostView: View {
     @State private var isSubmitting = false
     @State private var showError = false
     
+    @FocusState private var isInputFocused: Bool    // 🔹 TextField 포커스 상태
+    
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     
     var body: some View {
@@ -42,6 +44,7 @@ struct HousingCostView: View {
                 // 보증금
                 TextField("보증금 (예: 5,000,000)", text: $deposit)
                     .keyboardType(.numberPad)
+                    .focused($isInputFocused)                // 🔹 포커스 연결
                     .padding()
                     .frame(maxWidth: 280)
                     .background(Color(.systemGray6))
@@ -57,6 +60,7 @@ struct HousingCostView: View {
                     text: $monthlyCost
                 )
                 .keyboardType(.numberPad)
+                .focused($isInputFocused)                    // 🔹 포커스 연결
                 .padding()
                 .frame(maxWidth: 280)
                 .background(Color(.systemGray6))
@@ -86,7 +90,9 @@ struct HousingCostView: View {
                 
                 Spacer()
             }
-            .offset(y: 300)
+            // 🔹 키보드가 뜨면 전체 VStack을 조금 위로 올려주기
+            .offset(y: isInputFocused ? 80 : 230)
+            .animation(.easeOut(duration: 0.25), value: isInputFocused)
         }
         .alert("저장에 실패했어요", isPresented: $showError) {
             Button("확인", role: .cancel) {}
@@ -139,4 +145,3 @@ struct HousingCostView: View {
             .environmentObject(AppState())
     }
 }
-

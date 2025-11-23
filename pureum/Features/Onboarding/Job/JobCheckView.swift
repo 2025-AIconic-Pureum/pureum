@@ -57,7 +57,7 @@ struct JobCheckView: View {
                 
                 Spacer()
             }
-            .offset(x: 0, y: 300)
+            .offset(x: 0, y: 230)
         }
     }
 }

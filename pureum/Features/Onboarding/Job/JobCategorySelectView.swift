@@ -9,17 +9,15 @@
 //  JobCategorySelectView.swift
 //  pureum
 //
-//  Created by 김수진 on 11/22/25.
-//
+
 import SwiftUI
 
 struct JobCategorySelectView: View {
     
-    @EnvironmentObject var appState: AppState      // ✅ 추가
+    @EnvironmentObject var appState: AppState
     
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     
-    // 직종 리스트
     private let categories = [
         "기획·전략",
         "마케팅·홍보·조사",
@@ -44,31 +42,31 @@ struct JobCategorySelectView: View {
         "공공·복지"
     ]
     
-    // 2열 그리드
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             GreenHeaderBackground()
             
-            VStack {
-                Spacer().frame(height: 100)
-                
-                Text("어떤 직종에 가까운가요?")
-                    .font(.title3)
-                    .bold()
-                    .padding(.horizontal, 24)
-                    .frame(alignment: .leading)
-                
-                Text("해당되는 직종을 선택해주세요.")
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
-                
-                ScrollView {
+            ScrollView {   // ✅ 전체 화면 스크롤 가능
+                VStack(spacing: 20) {
+                    Spacer().frame(height: 100)
+                    
+                    Text("어떤 직종에 가까운가요?")
+                        .font(.title3)
+                        .bold()
+                        .padding(.horizontal, 24)
+                        .frame(alignment: .leading)
+                    
+                    Text("해당되는 직종을 선택해주세요.")
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 24)
+                        .frame(alignment: .leading)
+                    
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(categories, id: \.self) { category in
                             NavigationLink(
@@ -77,7 +75,8 @@ struct JobCategorySelectView: View {
                                 Text(category)
                                     .font(.subheadline)
                                     .multilineTextAlignment(.center)
-                                    .frame(maxWidth: 200, minHeight: 60)
+                                    .frame(height: 60)
+                                    .frame(maxWidth: .infinity)
                                     .padding(.horizontal, 4)
                                     .background(Color.white)
                                     .foregroundColor(.black)
@@ -87,13 +86,11 @@ struct JobCategorySelectView: View {
                                     )
                                     .cornerRadius(12)
                             }
-                            // 👇 버튼 탭 시 AppState에 category 저장
                             .simultaneousGesture(TapGesture().onEnded {
                                 if var job = appState.jobProfile {
                                     job.category = category
                                     appState.jobProfile = job
                                 } else {
-                                    // 아직 jobProfile이 없으면 새로 만들어줌
                                     appState.jobProfile = JobProfile(
                                         category: category,
                                         jobType: "",
@@ -102,23 +99,23 @@ struct JobCategorySelectView: View {
                                         monthlyIncome: 0
                                     )
                                 }
-                                print("📌 JobProfile.category 저장:", category)
                             })
                         }
                     }
                     .padding(.horizontal, 150)
+
+                    Spacer().frame(height: 280)
                 }
-                
-                Spacer()
+                .offset(y: 230)
             }
-            .offset(x: 0, y: 300)
         }
+        .edgesIgnoringSafeArea(.top)  // ⬅️ 초록 헤더가 자연스럽게 들어가게
     }
 }
 
 #Preview {
     NavigationStack {
         JobCategorySelectView()
-            .environmentObject(AppState())   // ✅ 프리뷰에도 추가
+            .environmentObject(AppState())
     }
 }

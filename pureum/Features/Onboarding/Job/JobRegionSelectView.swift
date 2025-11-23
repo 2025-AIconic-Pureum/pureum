@@ -91,7 +91,7 @@ struct JobRegionSelectView: View {
                 
                 Spacer()
             }
-            .offset(y: 300)
+            .offset(y: 230)
         }
     }
     

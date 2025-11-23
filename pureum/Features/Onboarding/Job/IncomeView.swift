@@ -8,6 +8,7 @@ struct IncomeView: View {
     
     @EnvironmentObject var appState: AppState      // ✅ AppState 주입
     @State private var income: String = ""
+    @FocusState private var isInputFocused: Bool
     
     let job: String      // "없음" 또는 "IT개발·데이터 / 정규직"
     
@@ -35,6 +36,7 @@ struct IncomeView: View {
                 
                 TextField("예: 1,500,000", text: $income)
                     .keyboardType(.numberPad)
+                    .focused($isInputFocused)
                     .padding()
                     .frame(maxWidth: 280)
                     .background(Color(.systemGray6))
@@ -80,7 +82,8 @@ struct IncomeView: View {
                 
                 Spacer()
             }
-            .offset(y: 300)
+            .offset(y: isInputFocused ? 80 : 230)
+                        .animation(.easeOut(duration: 0.25), value: isInputFocused)
         }
     }
 }
