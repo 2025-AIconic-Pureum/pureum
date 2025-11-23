@@ -18,7 +18,8 @@ C타입 복지의 사각지대에 놓인 사람들 위한 서비스 (ex. 위안�
 
 
 ## 4.시연 영상
-https://youtu.be/R8WFgsgul08
+
+https://youtu.be/Pa1xlb657RE
 
 ## 5.서비스 소개
 
