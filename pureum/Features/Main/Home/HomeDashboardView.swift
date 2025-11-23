@@ -11,21 +11,38 @@ struct HomeDashboardView: View {
     private let headerGreen = Color(red: 36/255, green: 178/255, blue: 40/255)
     private let lightGreen  = Color(red: 230/255, green: 245/255, blue: 235/255)
 
+    // 금액 포매팅용 (1,500,000원 이런 식)
+    private func formatWon(_ value: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return (formatter.string(from: NSNumber(value: value)) ?? "\(value)") + "원"
+    }
+
     // ✅ AppState 기반으로 동적으로 계산
     private var jobStatusText: String {
-        if let job = appState.jobProfile {
-            return "\(job.regionSido) \(job.regionSigungu)에 \(job.category) (\(job.jobType)), 월 \(job.monthlyIncome)원"
-        } else {
+        guard let job = appState.jobProfile else {
             return "등록된 일자리가 없습니다."
         }
+        
+        return """
+        지역: \(job.regionSido) \(job.regionSigungu)
+        직종: \(job.category)
+        고용 형태: \(job.jobType)
+        월 소득: \(formatWon(job.monthlyIncome))
+        """
     }
-    
+
     private var housingStatusText: String {
-        if let h = appState.housingProfile {
-            return "\(h.regionSido) \(h.regionSigungu) • \(h.housingType) • 월 \(h.monthlyCost)원"
-        } else {
+        guard let h = appState.housingProfile else {
             return "아직 주거가 설정되지 않았습니다."
         }
+        
+        return """
+        지역: \(h.regionSido) \(h.regionSigungu)
+        주거 형태: \(h.housingType)
+        보증금: \(formatWon(h.deposit))
+        월 주거비: \(formatWon(h.monthlyCost))
+        """
     }
     
     var body: some View {
