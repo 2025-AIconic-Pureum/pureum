@@ -2,8 +2,7 @@
 //  PlanFilterInputView.swift
 //  pureum
 //
-//  Created by 김수진 on 11/23/25.
-//
+
 import SwiftUI
 
 /// AI 플랜 추천을 위한 조건 입력 화면
@@ -13,6 +12,7 @@ struct PlanFilterInputView: View {
     let jobCandidates: [JobCandidate]
 
     @EnvironmentObject var regionStore: RegionStore
+    @EnvironmentObject var appState: AppState
 
     // MARK: - 주거 조건 상태
     @State private var selectedHousingType: String = ""
@@ -30,225 +30,213 @@ struct PlanFilterInputView: View {
     @State private var selectedCareer: String = "무관"
     @State private var selectedEducation: String = "무관"
 
-    // MARK: - 결과 / 상태
+    // MARK: - 상태
     @State private var isLoading: Bool = false
-    @State private var resultText: String = ""
+    @State private var result: PlanRecommendationResponse?
     @State private var errorMessage: String?
 
-    // MARK: - 상수 배열들
+    // 저장 성공/실패 알림
+    @State private var showSaveSuccess = false
+    @State private var showSaveError = false
 
-    // 직종 리스트
+    // MARK: - Constants
     private let categories = [
-        "기획·전략",
-        "마케팅·홍보·조사",
-        "회계·세무·재무",
-        "인사·노무·HRD",
-        "총무·법무·사무",
-        "IT개발·데이터",
-        "디자인",
-        "영업·판매·무역",
-        "고객상담·TM",
-        "구매·자재·물류",
-        "상품기획·MD",
-        "운전·운송·배송",
-        "서비스",
-        "생산",
-        "건설·건축",
-        "의료",
-        "연구·R&D",
-        "교육",
-        "미디어·문화·스포츠",
-        "금융·보험",
-        "공공·복지"
+        "기획·전략", "마케팅·홍보·조사", "회계·세무·재무", "인사·노무·HRD",
+        "총무·법무·사무", "IT개발·데이터", "디자인", "영업·판매·무역",
+        "고객상담·TM", "구매·자재·물류", "상품기획·MD", "운전·운송·배송",
+        "서비스", "생산", "건설·건축", "의료", "연구·R&D",
+        "교육", "미디어·문화·스포츠", "금융·보험", "공공·복지"
     ]
 
-    // 주거 형태 목록
     private let housingTypes = [
-        "원룸 / 오피스텔",
-        "기숙사",
-        "쉐어하우스",
-        "공공임대",
-        "아파트",
-        "기타"
+        "원룸 / 오피스텔", "기숙사", "쉐어하우스",
+        "공공임대", "아파트", "기타"
     ]
 
-    // 고용 형태
     private let retypes = [
-        "전체",
-        "정규직",
-        "계약직",
-        "아르바이트",
-        "인턴",
-        "프리랜서",
-        "기타"
+        "전체", "정규직", "계약직", "아르바이트",
+        "인턴", "프리랜서", "기타"
     ]
 
-    // 경력
     private let careers = [
-        "무관",
-        "신입",
-        "1~3년",
-        "3~5년",
-        "5년 이상"
+        "무관", "신입", "1~3년", "3~5년", "5년 이상"
     ]
 
-    // 학력
     private let educations = [
-        "무관",
-        "고졸",
-        "초대졸",
-        "대졸",
-        "석사 이상"
+        "무관", "고졸", "초대졸", "대졸", "석사 이상"
     ]
 
     // MARK: - Body
 
     var body: some View {
         Form {
-            // MARK: - 주거 조건 섹션
-            if mode == .houseJob || mode == .house {
-                Section(header: Text("주거 조건")) {
-                    Picker("주거 형태", selection: $selectedHousingType) {
-                        ForEach(housingTypes, id: \.self) { type in
-                            Text(type).tag(type)
-                        }
-                    }
+            if mode != .job { housingSection }
+            if mode != .house { jobSection }
 
-                    // 도시 선택
-                    Picker("주거 도시", selection: $selectedHousingCity) {
-                        ForEach(cities, id: \.self) { city in
-                            Text(city).tag(city)
-                        }
-                    }
+            runButtonSection
 
-                    // 구/군 선택 (선택된 도시 기준)
-                    Picker("주거 구/군", selection: $selectedHousingDistrict) {
-                        ForEach(districts(for: selectedHousingCity), id: \.self) { gu in
-                            Text(gu).tag(gu)
-                        }
-                    }
-
-                    TextField("최대 보증금 (원)", text: $maxDeposit)
-                        .keyboardType(.numberPad)
-
-                    TextField("최대 월 주거비 (원)", text: $maxMonthlyCost)
-                        .keyboardType(.numberPad)
-                }
-            }
-
-            // MARK: - 일자리 조건 섹션
-            if mode == .houseJob || mode == .job {
-                Section(header: Text("일자리 조건")) {
-                    Picker("직종", selection: $selectedJobCategory) {
-                        ForEach(categories, id: \.self) { cat in
-                            Text(cat).tag(cat)
-                        }
-                    }
-
-                    // 도시 선택
-                    Picker("일자리 도시", selection: $selectedJobCity) {
-                        ForEach(cities, id: \.self) { city in
-                            Text(city).tag(city)
-                        }
-                    }
-
-                    // 구/군 선택
-                    Picker("일자리 구/군", selection: $selectedJobDistrict) {
-                        ForEach(districts(for: selectedJobCity), id: \.self) { gu in
-                            Text(gu).tag(gu)
-                        }
-                    }
-
-                    Picker("고용 형태", selection: $selectedRetype) {
-                        ForEach(retypes, id: \.self) { type in
-                            Text(type).tag(type)
-                        }
-                    }
-
-                    TextField("최소 월급 (원)", text: $minSalary)
-                        .keyboardType(.numberPad)
-
-                    Picker("경력", selection: $selectedCareer) {
-                        ForEach(careers, id: \.self) { c in
-                            Text(c).tag(c)
-                        }
-                    }
-
-                    Picker("학력", selection: $selectedEducation) {
-                        ForEach(educations, id: \.self) { e in
-                            Text(e).tag(e)
-                        }
-                    }
-                }
-            }
-
-            // MARK: - 실행 버튼 섹션
-            Section {
-                Button {
-                    Task { await runAnalysis() }
-                } label: {
-                    HStack {
-                        if isLoading {
-                            ProgressView()
-                        }
-                        Text("AI 플랜 분석하기")
-                            .fontWeight(.semibold)
-                    }
-                }
-                .disabled(isLoading)
-            }
-
-            // MARK: - 에러 메시지
             if let error = errorMessage {
-                Section(header: Text("에러").foregroundColor(.red)) {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.footnote)
-                }
+                errorSection(error)
             }
 
-            // MARK: - 결과 표시
-            if !resultText.isEmpty {
-                Section(header: Text("추천 결과")) {
-                    Text(resultText)
-                        .font(.subheadline)
-                }
-            }
+            resultSection
         }
         .navigationTitle(titleForMode(mode))
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            setupDefaults()
+        .onAppear { setupDefaults() }
+        .alert("플랜 저장 완료!", isPresented: $showSaveSuccess) {
+            Button("확인", role: .cancel) { }
+        }
+        .alert("저장 실패", isPresented: $showSaveError) {
+            Button("확인", role: .cancel) { }
+        }
+    }
+    
+    private func titleForMode(_ mode: AnalysisMode) -> String {
+        switch mode {
+        case .houseJob: return "일자리 + 주거 플랜"
+        case .house:    return "주거 플랜"
+        case .job:      return "일자리 플랜"
         }
     }
 
-    // MARK: - RegionStore 헬퍼
 
-    /// ["대구": ["북구","수성구"], "서울": ["관악구","강남구"]] 에서 도시 리스트만 뽑기
-    private var cities: [String] {
-        regionStore.regions.keys.sorted()
+    // MARK: - Sections
+
+    @ViewBuilder
+    private var housingSection: some View {
+        Section(header: Text("주거 조건")) {
+            Picker("주거 형태", selection: $selectedHousingType) {
+                ForEach(housingTypes, id: \.self) { Text($0) }
+            }
+            Picker("도시", selection: $selectedHousingCity) {
+                ForEach(cities, id: \.self) { Text($0) }
+            }
+            Picker("구/군", selection: $selectedHousingDistrict) {
+                ForEach(districts(for: selectedHousingCity), id: \.self) { Text($0) }
+            }
+            TextField("최대 보증금 (원)", text: $maxDeposit)
+                .keyboardType(.numberPad)
+            TextField("최대 월 주거비 (원)", text: $maxMonthlyCost)
+                .keyboardType(.numberPad)
+        }
     }
 
-    /// 선택된 도시의 구/군 리스트
+    @ViewBuilder
+    private var jobSection: some View {
+        Section(header: Text("일자리 조건")) {
+            Picker("직종", selection: $selectedJobCategory) {
+                ForEach(categories, id: \.self) { Text($0) }
+            }
+
+            Picker("도시", selection: $selectedJobCity) {
+                ForEach(cities, id: \.self) { Text($0) }
+            }
+
+            Picker("구/군", selection: $selectedJobDistrict) {
+                ForEach(districts(for: selectedJobCity), id: \.self) { Text($0) }
+            }
+
+            Picker("고용 형태", selection: $selectedRetype) {
+                ForEach(retypes, id: \.self) { Text($0) }
+            }
+
+            TextField("최소 월급 (원)", text: $minSalary)
+                .keyboardType(.numberPad)
+
+            Picker("경력", selection: $selectedCareer) {
+                ForEach(careers, id: \.self) { Text($0) }
+            }
+
+            Picker("학력", selection: $selectedEducation) {
+                ForEach(educations, id: \.self) { Text($0) }
+            }
+        }
+    }
+
+    private var runButtonSection: some View {
+        Section {
+            Button {
+                Task { await runAnalysis() }
+            } label: {
+                HStack {
+                    if isLoading { ProgressView() }
+                    Text("AI 플랜 분석하기")
+                }
+            }
+            .disabled(isLoading)
+        }
+    }
+
+    private func errorSection(_ error: String) -> some View {
+        Section(header: Text("에러").foregroundColor(.red)) {
+            Text(error).foregroundColor(.red)
+        }
+    }
+
+    // MARK: - 결과 출력
+
+    @ViewBuilder
+    private var resultSection: some View {
+        if let res = result {
+            Section(header: Text("추천 결과")) {
+                ForEach(res.combos) { combo in
+                    comboCard(combo)
+                }
+
+                Button("이 결과 저장하기") {
+                    Task { await savePlan() }
+                }
+            }
+        }
+    }
+
+    private func comboCard(_ combo: PlanRecommendationItem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("⭐️ \(combo.rank)위")
+                .font(.subheadline).bold()
+
+            // 집 정보
+            if mode != .job {
+                VStack(alignment: .leading) {
+                    Text("🏠 집: \(combo.house.name)")
+                    Text(combo.house.locationDisplay)
+                    Text("보증금: \(combo.house.depositDisplay)")
+                    Text("월세: \(combo.house.rentFeeDisplay)")
+                }
+                .font(.footnote)
+            }
+
+            // 일자리 정보
+            if mode != .house {
+                VStack(alignment: .leading) {
+                    Text("💼 일자리: \(combo.job.title)")
+                    Text(combo.job.company)
+                    Text(combo.job.location)
+                    Text("급여: \(combo.job.salaryDisplay)")
+                }
+                .font(.footnote)
+            }
+
+            Text("📝 이유: \(combo.reason)")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
+    }
+
+    // MARK: - 지역 헬퍼
+
+    private var cities: [String] {
+        Array(regionStore.regions.keys).sorted()
+    }
+
     private func districts(for city: String) -> [String] {
         regionStore.regions[city] ?? []
     }
 
-    /// 주거 location 문자열 (예: "대구 북구")
-    private var housingLocation: String {
-        selectedHousingCity.isEmpty || selectedHousingDistrict.isEmpty
-        ? ""
-        : "\(selectedHousingCity) \(selectedHousingDistrict)"
-    }
-
-    /// 일자리 location 문자열 (예: "대구 수성구")
-    private var jobLocation: String {
-        selectedJobCity.isEmpty || selectedJobDistrict.isEmpty
-        ? ""
-        : "\(selectedJobCity) \(selectedJobDistrict)"
-    }
-
-    // MARK: - 초기 선택값 세팅
+    // MARK: - 초기값 설정
 
     private func setupDefaults() {
         if selectedHousingType.isEmpty {
@@ -270,57 +258,140 @@ struct PlanFilterInputView: View {
         }
     }
 
-    // MARK: - 타이틀
+    // MARK: - 추천 호출
 
-    private func titleForMode(_ mode: AnalysisMode) -> String {
-        switch mode {
-        case .houseJob: return "일자리 + 주거 플랜"
-        case .house:    return "주거 플랜"
-        case .job:      return "일자리 플랜"
+    private func runAnalysis() async {
+        isLoading = true
+        errorMessage = nil
+        result = nil
+
+        do {
+            let filteredHouses = self.filteredHouses()
+            let filteredJobs = self.filteredJobs()
+
+            switch mode {
+            case .houseJob:
+                self.result = try await AnalysisAPI.shared.recommendHouseJob(
+                    houses: filteredHouses,
+                    jobs: filteredJobs
+                )
+            case .house:
+                self.result = try await AnalysisAPI.shared.recommendHouseOnly(
+                    houses: filteredHouses
+                )
+            case .job:
+                self.result = try await AnalysisAPI.shared.recommendJobOnly(
+                    jobs: filteredJobs
+                )
+            }
+
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
         }
     }
 
-    // MARK: - 실제 분석 호출 (나중에 서버 연동 자리)
+    // MARK: - 필터링
 
-    private func runAnalysis() async {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-            resultText = ""
+    private func filteredHouses() -> [HouseCandidate] {
+        var result = houseCandidates
+
+        if !selectedHousingCity.isEmpty {
+            result = result.filter { $0.location.contains(selectedHousingCity) }
+        }
+        if !selectedHousingDistrict.isEmpty {
+            result = result.filter { $0.location.contains(selectedHousingDistrict) }
         }
 
-        // TODO: 여기서 houseCandidates / jobCandidates + 선택한 조건들
-        //       (housingLocation, jobLocation, selectedJobCategory, etc.)
-        //       서버로 POST 하면 됨.
+        if let maxDepositInt = Int(maxDeposit.filter(\.isNumber)), maxDepositInt > 0 {
+            result = result.filter { $0.deposit <= maxDepositInt }
+        }
+        if let maxMonthlyInt = Int(maxMonthlyCost.filter(\.isNumber)), maxMonthlyInt > 0 {
+            result = result.filter { $0.monthlyCost <= maxMonthlyInt }
+        }
 
-        // 지금은 디버그용 더미 딜레이 & 결과
-        try? await Task.sleep(nanoseconds: 800_000_000)
+        return result
+    }
 
-        await MainActor.run {
-            isLoading = false
-            resultText = """
-            [디버그용 더미 결과]
+    private func filteredJobs() -> [JobCandidate] {
+        var result = jobCandidates
 
-            모드: \(titleForMode(mode))
+        if !selectedJobCity.isEmpty {
+            result = result.filter { $0.location.contains(selectedJobCity) }
+        }
+        if !selectedJobDistrict.isEmpty {
+            result = result.filter { $0.location.contains(selectedJobDistrict) }
+        }
 
-            ▶ 주거 조건
-            도시: \(selectedHousingCity)
-            구/군: \(selectedHousingDistrict)
-            location: \(housingLocation)
-            주거 형태: \(selectedHousingType)
-            최대 보증금: \(maxDeposit)
-            최대 월 주거비: \(maxMonthlyCost)
+        if !selectedJobCategory.isEmpty {
+            result = result.filter { $0.jobCategory == selectedJobCategory }
+        }
 
-            ▶ 일자리 조건
-            도시: \(selectedJobCity)
-            구/군: \(selectedJobDistrict)
-            location: \(jobLocation)
-            직종: \(selectedJobCategory)
-            고용 형태: \(selectedRetype)
-            최소 월급: \(minSalary)
-            경력: \(selectedCareer)
-            학력: \(selectedEducation)
-            """
+        if selectedRetype != "전체" {
+            result = result.filter { $0.retype == selectedRetype }
+        }
+
+        if let minSalaryInt = Int(minSalary.filter(\.isNumber)), minSalaryInt > 0 {
+            result = result.filter { $0.salary >= minSalaryInt }
+        }
+
+        return result
+    }
+
+    // MARK: - 저장 요청
+
+    
+    private func savePlan() async {
+        guard let userId = appState.userId else {
+            errorMessage = "로그인 후 이용해주세요."
+            return
+        }
+        guard let result = result else { return }
+
+        do {
+            // 🔥 combos 전부 저장
+            for combo in result.combos {
+                let houseId: String?
+                let jobId: String?
+
+                switch mode {
+                case .houseJob:
+                    houseId = combo.house.id
+                    jobId = combo.job.id
+                case .house:
+                    houseId = combo.house.id
+                    jobId = nil
+                case .job:
+                    houseId = nil
+                    jobId = combo.job.id
+                }
+
+                let req = PlanSelectionRequestDTO(
+                    userId: userId,
+                    rank: combo.rank,
+                    houseId: houseId,
+                    jobId: jobId,
+                    reason: combo.reason
+                )
+
+                try await AnalysisAPI.shared.savePlanSelection(req)
+            }
+
+            showSaveSuccess = true
+
+        } catch {
+            showSaveError = true
+        }
+    }
+
+
+
+    private func modeString() -> String {
+        switch mode {
+        case .houseJob: return "HOUSE_JOB"
+        case .house: return "HOUSE"
+        case .job: return "JOB"
         }
     }
 }

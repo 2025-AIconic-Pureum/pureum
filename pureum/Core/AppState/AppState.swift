@@ -1,4 +1,3 @@
-//
 //  AppState.swift
 //  pureum
 //
@@ -79,24 +78,18 @@ struct UserProfileResponseDTO: Codable {
     let monthlyCost: Int?
 }
 
-//분석
+//---------------------------------------------
+// MARK: - 분석 후보 입력 모델
+//---------------------------------------------
 
-// MARK: - 집 후보 정보
 struct HouseCandidate: Identifiable, Codable, Equatable {
     let id: UUID = UUID()
-    let housingType: String   // 주거 형태 (원룸, 기숙사 등)
-    let location: String      // 위치 (예: "대구 수성구")
-    let deposit: Int          // 보증금
-    let monthlyCost: Int      // 월 주거 비용
-    enum CodingKeys: String, CodingKey {
-        case housingType
-        case location
-        case deposit
-        case monthlyCost
-    }
+    let housingType: String
+    let location: String
+    let deposit: Int
+    let monthlyCost: Int
 }
 
-// MARK: - 일자리 후보 정보
 struct JobCandidate: Identifiable, Codable, Equatable {
     let id: UUID = UUID()
     let jobCategory: String
@@ -105,27 +98,134 @@ struct JobCandidate: Identifiable, Codable, Equatable {
     let salary: Int
     let career: String
     let education: String
-    enum CodingKeys: String, CodingKey {
-        case jobCategory
-        case retype
-        case location
-        case salary
-        case career
-        case education 
-    }
 }
 
 enum AnalysisMode {
-    case houseJob   // 집 + 일자리 둘 다 추천
-    case house      // 집만 추천 (일자리는 이미 있음)
-    case job        // 일자리만 추천 (집은 이미 있음)
+    case houseJob
+    case house
+    case job
 }
+
+//---------------------------------------------
+// MARK: - 🔥 변경 핵심: 백엔드 최신 구조 반영
+//---------------------------------------------
+
+/// 백엔드: PlanRecommendationResponse
+struct PlanRecommendationResponse: Codable {
+    let combos: [PlanRecommendationItem]
+}
+
+struct PlanRecommendationItem: Codable, Identifiable {
+    let rank: Int
+    let house: PlanHouseInfo
+    let job: PlanJobInfo
+    let reason: String
+
+    var id: Int { rank }
+}
+
+struct PlanHouseInfo: Codable {
+    let id: String
+    let locationDisplay: String
+    let name: String
+    let housingTypeDetail: String
+    let depositDisplay: String
+    let rentFeeDisplay: String
+    let maintenanceFeeDisplay: String
+    let surrounding: String
+}
+
+struct PlanJobInfo: Codable {
+    let id: String
+    let title: String
+    let company: String
+    let location: String
+    let career: String
+    let edu: String
+    let salaryDisplay: String
+    let workTimeDisplay: String
+    let requirements: String
+}
+
+//---------------------------------------------
+// MARK: - 기존 저장 요청 DTO (건드리지 않음)
+//---------------------------------------------
+/// 서버 /analysis/save 에 보낼 저장 요청 DTO
+struct PlanSelectionRequestDTO: Codable {
+    let userId: Int
+    let rank: Int
+    let houseId: String?
+    let jobId: String?
+    let reason: String
+}
+
+struct PlanSaveRequest: Codable {
+    let userId: Int
+    let mode: String
+    let combos: [PlanRecommendationItem]
+}
+
+
+struct HousingJobCombo: Codable, Identifiable {
+    let rank: Int
+    let house: String
+    let job: String
+    let reason: String
+
+    var id: Int { rank }
+}
+
+struct HousingJobPlanResponse: Codable {
+    let combos: [HousingJobCombo]
+}
+
+struct HousingOnlyItem: Codable, Identifiable {
+    let rank: Int
+    let house: String
+    let reason: String
+
+    var id: Int { rank }
+}
+
+struct HousingOnlyPlanResponse: Codable {
+    let houses: [HousingOnlyItem]
+}
+
+struct JobOnlyItem: Codable, Identifiable {
+    let rank: Int
+    let job: String
+    let reason: String
+
+    var id: Int { rank }
+}
+
+struct JobOnlyPlanResponse: Codable {
+    let jobs: [JobOnlyItem]
+}
+
+struct PlanSelectionResponse: Codable {
+    let id: Int?
+    let userId: Int
+    let rank: Int
+    let houseId: String?
+    let jobId: String?
+    let reason: String
+    let createdAt: String
+}
+
+
+
+//---------------------------------------------
+// MARK: - ViewModel 수정
+//---------------------------------------------
 
 @MainActor
 final class PlanRecommendationViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var resultText: String = ""   // 서버에서 받은 String 그대로 표시
+
+    // 🔥 이제 이걸 사용함
+    @Published var fullResult: PlanRecommendationResponse?
 
     func runAnalysis(
         mode: AnalysisMode,
@@ -137,30 +237,15 @@ final class PlanRecommendationViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let result: String
-
             switch mode {
             case .houseJob:
-                // 집 + 일자리 후보 같이 보내기
-                result = try await AnalysisAPI.shared.recommendHouseJob(
-                    houses: houses,
-                    jobs: jobs
-                )
-
+                fullResult = try await AnalysisAPI.shared.recommendHouseJob(houses: houses, jobs: jobs)
             case .house:
-                // 집만 보내기
-                result = try await AnalysisAPI.shared.recommendHouseOnly(
-                    houses: houses
-                )
-
+                // 백엔드에서 house-only에도 동일 구조를 사용한다면 이것도 recommendFull로 구현
+                fullResult = try await AnalysisAPI.shared.recommendHouseOnly(houses: houses)
             case .job:
-                // 일자리만 보내기
-                result = try await AnalysisAPI.shared.recommendJobOnly(
-                    jobs: jobs
-                )
+                fullResult = try await AnalysisAPI.shared.recommendJobOnly(jobs: jobs)
             }
-
-            self.resultText = result
 
         } catch {
             self.errorMessage = error.localizedDescription
@@ -168,15 +253,38 @@ final class PlanRecommendationViewModel: ObservableObject {
     }
 }
 
+//---------------------------------------------
+// MARK: - AppState 이하 기존 그대로 유지
+//---------------------------------------------
 
+enum ConfirmedPlanMode: String, Codable {
+    case houseJob
+    case house
+    case job
+}
 
+struct ConfirmedPlan: Identifiable, Codable {
+    let id = UUID()
+    let mode: ConfirmedPlanMode
+    let title: String
+    let subtitle: String
+    let detail: String
+}
 
-// MARK: - AppState
+struct LastPlanResponse: Codable {
+    let id: Int
+    let userId: Int
+    let rank: Int
+    let house: PlanHouseInfo?
+    let job: PlanJobInfo?
+    let reason: String
+    let createdAt: String
+}
 
 final class AppState: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var hasOnboarded: Bool = false
-    @Published var finishedOnboarding: Bool = false 
+    @Published var finishedOnboarding: Bool = false
 
     @Published var assetProfile: AssetProfile?
     @Published var jobProfile: JobProfile?
@@ -185,7 +293,7 @@ final class AppState: ObservableObject {
     @Published var userId: Int?
     @Published var accessToken: String?
     @Published var userName: String?
-
+    @Published var confirmedPlan: ConfirmedPlan?
 
     func applyAuthResponse(_ res: AuthResponseDTO) {
         self.userId = res.userId
@@ -202,21 +310,13 @@ final class AppState: ObservableObject {
         userName = nil
     }
 
-
     // MARK: - 온보딩 요청 DTO 생성
-
     func makeOnboardingRequestDTO() -> OnboardingProfileRequestDTO? {
         guard let userId = userId else { return nil }
 
-        print("📌 asset:", assetProfile as Any)
-        print("📌 job:", jobProfile as Any)
-        print("📌 housing:", housingProfile as Any)
-
-        // ---- 자산 (필수) ----
         guard let asset = assetProfile else { return nil }
         let assetDTO = AssetDTO(currentAsset: asset.currentAsset)
 
-        // ---- 일자리 (선택) ----
         let jobDTO: JobDTO = {
             if let job = jobProfile {
                 return JobDTO(
@@ -227,17 +327,10 @@ final class AppState: ObservableObject {
                     monthlyIncome: job.monthlyIncome
                 )
             } else {
-                return JobDTO(
-                    hasJob: false,
-                    category: nil,
-                    jobType: nil,
-                    region: nil,
-                    monthlyIncome: nil
-                )
+                return JobDTO(hasJob: false, category: nil, jobType: nil, region: nil, monthlyIncome: nil)
             }
         }()
 
-        // ---- 주거 (선택) ----
         let housingDTO: HousingDTO = {
             if let housing = housingProfile {
                 return HousingDTO(
@@ -248,13 +341,7 @@ final class AppState: ObservableObject {
                     monthlyCost: housing.monthlyCost
                 )
             } else {
-                return HousingDTO(
-                    hasHousing: false,
-                    region: nil,
-                    housingType: nil,
-                    deposit: nil,
-                    monthlyCost: nil
-                )
+                return HousingDTO(hasHousing: false, region: nil, housingType: nil, deposit: nil, monthlyCost: nil)
             }
         }()
 
@@ -266,47 +353,37 @@ final class AppState: ObservableObject {
         )
     }
 
-
-
     // MARK: - 서버 프로필 적용
-
     func applyUserProfile(_ res: UserProfileResponseDTO) {
         self.hasOnboarded = res.hasOnboarded
 
-        // 자산
         self.assetProfile = AssetProfile(currentAsset: res.asset)
 
-        // 일자리
         if let category = res.jobCategory,
            !category.isEmpty,
            let region = res.jobRegion {
 
             let parts = region.split(separator: " ").map { String($0) }
-            let sido = parts.first ?? ""
-            let sigungu = parts.count > 1 ? parts[1] : ""
 
             self.jobProfile = JobProfile(
                 category: category,
                 jobType: res.jobType ?? "",
-                regionSido: sido,
-                regionSigungu: sigungu,
+                regionSido: parts.first ?? "",
+                regionSigungu: parts.count > 1 ? parts[1] : "",
                 monthlyIncome: res.monthlyIncome ?? 0
             )
         } else {
             self.jobProfile = nil
         }
 
-        // 주거
         if let region = res.housingRegion,
            !region.isEmpty {
 
             let parts = region.split(separator: " ").map { String($0) }
-            let sido = parts.first ?? ""
-            let sigungu = parts.count > 1 ? parts[1] : ""
 
             self.housingProfile = HousingProfile(
-                regionSido: sido,
-                regionSigungu: sigungu,
+                regionSido: parts.first ?? "",
+                regionSigungu: parts.count > 1 ? parts[1] : "",
                 housingType: res.housingType ?? "",
                 deposit: res.deposit ?? 0,
                 monthlyCost: res.monthlyCost ?? 0
@@ -315,4 +392,33 @@ final class AppState: ObservableObject {
             self.housingProfile = nil
         }
     }
+    
+    @Published var recommendedHouse: PlanHouseInfo?
+    @Published var recommendedJob: PlanJobInfo?
+
+    
+    func loadLastPlan() async {
+        guard let userId = userId else { return }
+        
+        do {
+            let last = try await AnalysisAPI.shared.fetchLastPlan(userId: userId)
+
+            await MainActor.run {
+                self.confirmedPlan = ConfirmedPlan(
+                    mode: .houseJob,
+                    title: "최근 저장된 플랜",
+                    subtitle: "⭐️ \(last.rank)위 추천",
+                    detail: last.reason
+                )
+
+                // 🔥 FULL 상세가 이미 API에 있으므로 바로 세팅
+                self.recommendedHouse = last.house
+                self.recommendedJob = last.job
+            }
+        } catch {
+            print("최근 플랜 로드 실패:", error)
+        }
+    }
+
+
 }
